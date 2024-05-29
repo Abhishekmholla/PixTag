@@ -5,9 +5,6 @@ import base64
 import urllib.parse
 import numpy as np
 
-# Initiate Flask app
-app = Flask(__name__)
-app.app_context().push()
 
 # YOLO configs root path
 yolo_path = "yolo_tiny_configs"
