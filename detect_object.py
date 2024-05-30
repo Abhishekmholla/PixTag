@@ -1,13 +1,14 @@
 import os
 import cv2
 import time
+import uuid
+import boto3
 import base64
-import urllib.parse
 import numpy as np
-
+import urllib.parse
 
 # YOLO configs root path
-yolo_path = "yolo_tiny_configs"
+yolo_path = "/opt/yolo_tiny_configs"
 
 # Yolov3-tiny configs
 labels_path = "coco.names"
@@ -17,6 +18,13 @@ weights_path = "yolov3-tiny.weights"
 # Thresholds
 conf_threshold = 0.3
 nms_threshold = 0.1
+
+# S3 boto3 client
+s3 = boto3.client('s3')
+
+# DynamoDB boto3 client
+ddb = boto3.client('dynamodb')
+ddb_table_name = "images"
 
 def get_labels(labels_path):
     """
@@ -85,11 +93,11 @@ def load_model(config_path, weights_path):
     :return object detector model
     """
 
-    print("[INFO] Loading YOLO object detector ...")
+    print("Loading YOLO object detector ...")
     net = cv2.dnn.readNetFromDarknet(config_path, weights_path)
     return net
 
-def predict(image, net, labels, id):
+def predict(image, net, labels):
     """
     Load our YOLO object detector trained on COCO dataset (80 classes)
 
@@ -116,7 +124,7 @@ def predict(image, net, labels, id):
     end = time.time()
 
     # Log timing information on YOLO
-    print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+    print("YOLO took {:.6f} seconds".format(end - start))
 
     # Initialize our lists of detected bounding boxes, 
     # confidences and class IDs respectively
@@ -159,7 +167,7 @@ def predict(image, net, labels, id):
     idxs = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
 
     # Reponse object dictionary placeholder
-    response = dict()
+    tags = list()
     
     # Ensure at least one detection exists
     if len(idxs) > 0:
@@ -168,26 +176,11 @@ def predict(image, net, labels, id):
         objects_list = list()
         for i in idxs.flatten():
 
-            # A new object dictionary
-            new_object = dict()
-            new_object["label"] = labels[class_ids[i]]
-            new_object["accuracy"] = confidences[i]
-
-            # A new object boundary rectangle dictionary
-            new_object_boundary = dict()
-            new_object_boundary["height"] = boxes[i][3]
-            new_object_boundary["left"] = boxes[i][0]
-            new_object_boundary["top"] = boxes[i][1]
-            new_object_boundary["width"] = boxes[i][2]
-            new_object["rectangle"] = new_object_boundary
-
-            # Append objects to object_list list
-            objects_list.append(new_object)
-        
-        response["id"] = id
-        response["objects"] = objects_list
-
-    return response
+            # Retain tags with greater than 0.6 confidence
+            if confidences[i] > 0.6:
+                tags.append(labels[class_ids[i]])
+            
+    return tags
 
 # Get YOLO configs
 lables = get_labels(labels_path)
@@ -198,32 +191,43 @@ def run(event, _):
     """
     A lambda function to detect objects in a given image
     """
-
+    
     # Resolve S3 image upload event parameters
     bucket = event["Records"][0]["s3"]["bucket"]["name"]
     key = urllib.parse.unquote_plus(event["Records"][0]["s3"]["object"]["key"], encoding = "utf-8")
-    image_path = f"s3://{bucket}/{key}"
+
+    # Get image S3 object
+    image_object = s3.get_object(Bucket = bucket, Key = key)
 
     try: 
 
         # Encode image to base64 string
-        image_file = open(image_path, "rb")
-        image_base64_str = base64.b64encode(image_file.read())
-        image_file.close()
+        print("Encoding image to base64")
+        image_base64_str = base64.b64encode(image_object['Body'].read())
 
         # Convert base64 image string to OpenCV image
+        print("Converting to OpenCV image")
         image = np.frombuffer(base64.b64decode(image_base64_str), np.uint8)
         image = cv2.imdecode(image, flags = cv2.COLOR_BGR2RGB)
         
-        # Load the neural net.
+        # Load the neural net
+        print("Loading model")
         nets = load_model(configs, weights)
         
         # Perform predictions
-        response = predict(image, nets, lables, id)
+        print("Getting predictions")
+        tags = list(set(predict(image, nets, lables)))
         
-        # Return JSON response
-        print(response)
+        # Insert item to DynamoDB table
+        print(f"Inserting item to DynamoDB table: {ddb_table_name} with tags: {tags}")
+        ddb.put_item(
+            TableName = ddb_table_name, 
+            Item = {
+                "user_id": { "S": str(uuid.uuid4()) },
+                "thumbnail_url": { "S": f"s3://{bucket}/thumbnails/{key.split('/')[-1]}" },
+                "tags": { "SS": tags }
+            }
+        )
     
     except Exception as e:
         print(f"Exception: {e}")
-
