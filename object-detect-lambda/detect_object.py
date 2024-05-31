@@ -26,6 +26,10 @@ s3 = boto3.client('s3')
 ddb = boto3.client('dynamodb')
 ddb_table_name = "images"
 
+# Images S3 prefix
+images_prefix = "images"
+thumbnails_prefix = "thumbnails"
+
 def get_labels(labels_path):
     """
     Load the COCO class labels our YOLO model was trained on
@@ -194,7 +198,8 @@ def run(event, _):
     
     # Resolve S3 image upload event parameters
     bucket = event["Records"][0]["s3"]["bucket"]["name"]
-    key = urllib.parse.unquote_plus(event["Records"][0]["s3"]["object"]["key"], encoding = "utf-8")
+    prefix = urllib.parse.unquote_plus(event["Records"][0]["s3"]["object"]["key"], encoding = "utf-8")
+    key = f"{images_prefix}/{prefix.split('/')[-1]}"
 
     # Get image S3 object
     image_object = s3.get_object(Bucket = bucket, Key = key)
@@ -224,7 +229,8 @@ def run(event, _):
             TableName = ddb_table_name, 
             Item = {
                 "user_id": { "S": str(uuid.uuid4()) },
-                "thumbnail_url": { "S": f"s3://{bucket}/thumbnails/{key.split('/')[-1]}" },
+                "thumbnail_url": { "S": f"s3://{bucket}/{thumbnails_prefix}/{key.split('/')[-1]}" },
+                "image_url": { "S": f"s3://{bucket}/{key}" },
                 "tags": { "SS": tags }
             }
         )
