@@ -1,0 +1,70 @@
+:root {
+    --md-filled-button-container-shape: 5px;
+    --md-filled-button-label-text-font: system-ui;
+    --md-sys-color-primary: #003a6a;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-typescale-body-large-font: "Comfortaa", sans-serif;
+    --md-filled-button-label-text-font: "Comfortaa", sans-serif;
+    --md-filled-button-label-text-size: 0.8em;
+}
+
+body {
+    margin: 20px 50px;
+    font-family: "Comfortaa", sans-serif;
+}
+
+.text_field {
+    font-family: "Comfortaa", sans-serif;
+}
+
+#subheading {
+    font-size: 1em;
+}
+
+#description {
+    font-size: 0.8em;
+}
+
+.container {
+    padding-top: 50px;
+}
+
+/* HEADER */
+
+.header {
+    padding: 50px;
+    height: 300px;
+}
+
+/* SEARCH BY TAGS */
+
+#search-by-tags {
+    padding: 30px 50px;
+    height: 420px;
+}
+
+#search-by-thumbnail {
+    padding: 30px 50px;
+    height: 350px;
+}
+
+#search-by-image {
+    padding: 30px 50px;
+    height: 290px;
+}
+
+#add-delete-tags {
+    padding: 30px 50px;
+    height: 320px;
+}
+
+#delete-images {
+    padding: 30px 50px;
+    height: 400px;
+}
+
+/* OUTPUT SECTION */
+
+#output-section {
+    padding: 30px 50px;
+}
