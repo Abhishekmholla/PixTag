@@ -1,7 +1,12 @@
 <html>
     <head>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-        <link href="login/login.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link href="{{ url_for('static', filename='styles/home.css') }}" rel="stylesheet">
         <script type="importmap">
             {
             "imports": {
@@ -16,6 +21,97 @@
         </script>
     </head>
     <body>
-        <h1 class="md-typescale-display-medium">This is home page</h1>
+
+        <div class="header">
+            <h1>PixTag</h1>
+        </div>
+
+        <md-divider></md-divider>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-6">
+                    <div id="search-by-tags">
+                        <h2>Search By Tags</h2>
+                        <p id="subheading">Search for images by tags.</p>
+                        <p id="description">All individual tags must be separated by a semicolon.</p>
+                        <p id="description">In order to look for images with tags repeated a minimum number of times 
+                            pass your input as given below where images with minimum of 2 persons
+                            3 apples and 1 car will be retrieved.
+                        </p>
+                        <p id="description">Example - <code>person, 2; car; apple, 3</code> or
+                            <code>person; car; bus</code></p>
+            
+                        <form action = "{{ url_for('search_by_tags') }}" method="post">
+                            <md-outlined-text-field name="tags" label="Tags"></md-outlined-text-field>
+                            <br><br>
+                            <md-filled-button type="submit">Search</md-filled-button>
+                        </form>
+                    </div>
+
+                    <div id="search-by-thumbnail">
+                        <h2>Search By Thumbnail</h2>
+                        <p id="subheading">Retrieve full size image using thumbnail url.</p>
+                        <p id="description">Provide a S3 thumbnail url of the below format.</p>
+                        <p id="description"><code>https://(bucket-name).s3.amazonaws.com/(prefix).jpg</code></p>
+            
+                        <form action = "{{ url_for('search_by_thumbnail') }}" method="post">
+                            <md-outlined-text-field name="thumbnail_url" label="Thumbnail URLs"></md-outlined-text-field>
+                            <br><br>
+                            <md-filled-button type="submit">Search</md-filled-button>
+                        </form>
+                    </div>
+
+                    <div id="search-by-image">
+                        <h2>Search By Image</h2>
+                        <p id="subheading">Get all thumbnail with similar tags as the uploaded image.</p>
+                        <p id="description">Please upload an image in <code>png</code> or <code>jpg</code> format.</p>
+                        <input type="file"/>
+                        <br><br>
+                        <md-filled-button type="submit">Search</md-filled-button>
+                    </div>
+            
+
+                    <div id="add-delete-tags">
+                        <h2>Add / Delete Tags</h2>
+                        <p id="subheading">Add or delete tags for images.</p>
+                        <p id="description">Provide tags to be added or deleted from currently uploaded images.</p>
+            
+                        <form action = "{{ url_for('add_delete_tags') }}" method="post">
+                            <md-outlined-text-field name="tags" label="Tags"></md-outlined-text-field>
+                            <br><br>
+                            <md-filled-button type="submit">Submit</md-filled-button>
+                        </form>
+                    </div>
+            
+                    <div id="delete-images">
+                        <h2>Delete Images</h2>
+                        <p id="subheading">Deletes one or more images.</p>
+                        <p id="description">Please note that all entries from <code>DynamoDB</code> and <code>S3</code>
+                        will be deleted for the provided urls.</p>
+            
+                        <form action = "{{ url_for('delete_images') }}" method="post">
+                            <md-outlined-text-field name="urls" label="Image URLs"></md-outlined-text-field>
+                            <br><br>
+                            <md-filled-button type="submit">Delete</md-filled-button>
+                        </form>
+                    </div>
+                </div>
+                <div id="output-section" class="col-6">
+                    <h2>Output</h2>
+                    <p id="subheading">Here's where you can look for your output.</p>
+                    
+                    {% for image in images %}
+                        <img src="data:{{mimetype}};base64, {{image}}" alt="S3 Image">
+                    {% endfor %}
+                    
+                    {% if error %}
+                        <p id="description">{{ error_message }}</p>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+
       </body>
 </html>
