@@ -45,6 +45,7 @@ def get_labels(labels_path):
 
     return labels
 
+
 def get_weights(weights_path):
     """
     Derive the paths to the YOLO weights and model configuration
@@ -278,3 +279,5 @@ def run(event, _):
     
     response_body["message"] = "No images available for uploaded image's tags."
     response["body"] = response_body.__str__()
+    
+    return response
