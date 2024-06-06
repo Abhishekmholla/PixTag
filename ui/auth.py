@@ -28,4 +28,5 @@ def sign_in(username, password):
     )
     token = response["AuthenticationResult"]["IdToken"]
 
+    print(token)
     return token

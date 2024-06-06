@@ -13,3 +13,5 @@ class Endpoints(Enum):
     SEARCH_BY_TAGS = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-tags"
     SEARCH_BY_THUMBNAIL = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-thumbnail"
     SEARCH_BY_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-image"
+    ADD_REMOVE_BY_THUMBNAIL = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/add-remove-by-thumbnail"
+    DELETE_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/delete-image"
