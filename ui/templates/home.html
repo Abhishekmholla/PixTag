@@ -31,6 +31,20 @@
         <div class="container">
             <div class="row">
                 <div class="col-6">
+
+                    <div id="upload-image">
+                        <h2>Upload Image</h2>
+                        <p id="subheading">Upload your image.</p>
+                        <p id="description">Upload an image in <code>jpg</code> format. Thumbnail and tags will be 
+                        generated and stored in <code>S3</code> and DynamoDB services.</p>
+                        
+                        <form action = "{{ url_for('upload_image') }}" method="post" enctype="multipart/form-data">
+                            <input type="file" name="image"/>
+                            <br><br>
+                            <md-filled-button type="submit">Upload</md-filled-button>
+                        </form>
+                    </div>
+
                     <div id="search-by-tags">
                         <h2>Search By Tags</h2>
                         <p id="subheading">Search for images by tags.</p>
@@ -65,7 +79,7 @@
                     <div id="search-by-image">
                         <h2>Search By Image</h2>
                         <p id="subheading">Get all thumbnail with similar tags as the uploaded image.</p>
-                        <p id="description">Please upload an image in <code>png</code> or <code>jpg</code> format.</p>
+                        <p id="description">Please upload an image in <code>jpg</code> format.</p>
                         <input type="file"/>
                         <br><br>
                         <md-filled-button type="submit">Search</md-filled-button>
@@ -96,20 +110,37 @@
                             <md-filled-button type="submit">Delete</md-filled-button>
                         </form>
                     </div>
+                
                 </div>
+
                 <div id="output-section" class="col-6">
                     <h2>Output</h2>
                     <p id="subheading">Here's where you can look for your output.</p>
                     
-                    {% for image in images %}
-                        <img src="data:{{mimetype}};base64, {{image}}" alt="S3 Image">
-                    {% endfor %}
+                    {% if upload_image %}
+                        <p id="description">Below is the image uploaded.</p>
+                        <img src="data:{{mimetype}};base64, {{u_image}}" alt="S3 Image" id="image_full">
+                    {% endif %}
                     
+                    {% if search_by_tag %}
+                        <p id="description">Below are the images available for tags: <code>{{ tags }}</code></p>
+                        {% for image in images %}
+                            <img src="data:{{mimetype}};base64, {{image}}" alt="S3 Image">
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if search_by_thumbnail %}
+                        <p id="description">Below is the full size image for given thumbnail URL.</p>
+                        <p id="description">Image URL: <code>{{ image_url }}</code></p>
+                        <p id="description">Thumbnail URL: <code>{{ thumbnail_url }}</code></p>
+                        <img src="data:{{mimetype}};base64, {{full_image}}" alt="S3 Image" id="image_full">
+                    {% endif %}
+
                     {% if error %}
                         <p id="description">{{ error_message }}</p>
                     {% endif %}
-                    
                 </div>
+
             </div>
         </div>
 

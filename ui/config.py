@@ -9,4 +9,6 @@ class Config(Enum):
 
 class Endpoints(Enum):
     ENCODE_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/encode-image"
+    UPLOAD_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/upload-image"
     SEARCH_BY_TAGS = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-tags"
+    SEARCH_BY_THUMBNAIL = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-thumbnail"

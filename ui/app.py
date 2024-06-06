@@ -1,4 +1,5 @@
 import boto3
+import base64
 import auth
 from config import Endpoints, Config
 import helper
@@ -41,6 +42,43 @@ def home():
 
     return render_template("home.html", error = False)
 
+@app.route('/upload-image', methods=["POST"])
+def upload_image():
+    
+    if request.method == 'POST':
+        
+        try:
+    
+            image = request.files['image']
+            if image.filename == "":
+                return render_template("home.html", error = True, error_message = "No image is uploaded.")
+
+            log.info("Encoding image to base64 string")            
+            image_string = base64.b64encode(image.read())
+
+            # Invoking upload image API
+            request_body = {
+                "image": image_string.decode()
+            }
+            upload_response = requests.post(Endpoints.UPLOAD_IMAGE.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            upload_response = helper.get_response_dict(upload_response)
+        
+            return render_template(
+                "home.html", 
+                error = False,
+                mimetype = 'image/jpeg',
+                u_image = image_string.decode(), 
+                upload_image = True
+            )
+        
+        except Exception as e:
+            log.error(f"Error during image upload. Please check logs. Exception{e}")
+            return render_template("home.html", error = True, error_message = e)
+    
+    return render_template("home.html", error = False)
+
 @app.route('/search-by-tags', methods=["POST"])
 def search_by_tags():
     
@@ -50,7 +88,7 @@ def search_by_tags():
     if request.method == 'POST':
         
         try:
-    
+        
             tags = request.form.get('tags')
             
             if tags.strip() == "":
@@ -70,7 +108,7 @@ def search_by_tags():
                 return render_template("home.html", error = True, error_message = "No images found for given tags.")
 
             for link in tags_response["links"]:
-                s3_image_keys.append(link.split(f"s3://{Config.S3_BUCKET_NAME.value}/")[1])
+                s3_image_keys.append(link.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
 
             
             # Get image base64 encoded strings for all images
@@ -90,7 +128,9 @@ def search_by_tags():
                 "home.html", 
                 error = False,
                 mimetype = 'image/jpeg',
-                images = decoded_images, 
+                images = decoded_images,
+                search_by_tag = True,
+                tags = tags
             )
         
         except Exception as e:
@@ -101,15 +141,48 @@ def search_by_tags():
 
 @app.route('/search-by-thumbnail', methods=["POST"])
 def search_by_thumbnail():
-    
-    s3_image_keys = list()
-    decoded_images = list()
 
     if request.method == 'POST':
         
         try:
     
-            print("TODO")
+            thumbnail_url = request.form.get('thumbnail_url')
+            
+            if thumbnail_url.strip() == "":
+                return render_template("home.html", error = True, error_message = "Thumbnail URL can not be empty.")
+            
+            log.info(f"Thumbnail URL to query on: {thumbnail_url}")
+
+            # Get image links for given thumbnail url
+            request_body = {"thumbnail_url": thumbnail_url}
+            url_response = requests.post(Endpoints.SEARCH_BY_THUMBNAIL.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            url_response = helper.get_response_dict(url_response)
+            print(url_response)
+            if "image_url" not in url_response or url_response["image_url"] == "":
+                return render_template("home.html", error = True, error_message = "No images found for given thumbnail url.")
+            
+            # Get image base64 encoded strings for all images
+            image_request_body = {
+                "bucket_name": Config.S3_BUCKET_NAME.value,
+                "keys": [url_response['image_url'].split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1]]
+            }            
+            images_response = requests.post(Endpoints.ENCODE_IMAGE.value, 
+                                    json = image_request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            images_response = helper.get_response_dict(images_response)
+            print(images_response)
+
+            return render_template(
+                "home.html", 
+                error = False,
+                mimetype = 'image/jpeg',
+                full_image = images_response["images"][0].decode(),
+                search_by_thumbnail = True,
+                image_url = url_response['image_url'],
+                thumbnail_url = thumbnail_url
+            )
         
         except Exception as e:
             log.error(f"Exception: {e}")
