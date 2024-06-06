@@ -80,9 +80,11 @@
                         <h2>Search By Image</h2>
                         <p id="subheading">Get all thumbnail with similar tags as the uploaded image.</p>
                         <p id="description">Please upload an image in <code>jpg</code> format.</p>
-                        <input type="file"/>
-                        <br><br>
-                        <md-filled-button type="submit">Search</md-filled-button>
+                        <form action = "{{ url_for('search_by_image') }}" method="post" enctype="multipart/form-data">
+                            <input type="file" name="image"/>
+                                <br><br>
+                            <md-filled-button type="submit">Search</md-filled-button>
+                        </form>
                     </div>
             
 
@@ -134,6 +136,18 @@
                         <p id="description">Image URL: <code>{{ image_url }}</code></p>
                         <p id="description">Thumbnail URL: <code>{{ thumbnail_url }}</code></p>
                         <img src="data:{{mimetype}};base64, {{full_image}}" alt="S3 Image" id="image_full">
+                    {% endif %}
+
+                    {% if search_by_image %}
+                        <p id="description">Below are the thumbails similar to the one uploaded. 
+                            The unique tags present in the uploaded image are <code>{{ tags }}</code></p>
+                        <p id="description">Uploaded image:</code></p>
+                        <img src="data:{{mimetype}};base64, {{uploaded_image}}" alt="S3 Image" id="image_full">
+                        <br><br>
+                        <p id="description">Similar thumbnails with tags: <code>{{ tags }}</code></p>
+                        {% for timage in thumbnails %}
+                            <img src="data:{{mimetype}};base64, {{timage}}" alt="S3 Image">
+                        {% endfor %}
                     {% endif %}
 
                     {% if error %}
