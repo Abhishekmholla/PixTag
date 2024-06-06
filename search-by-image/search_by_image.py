@@ -268,6 +268,7 @@ def run(event, _):
         print(f"Matching image thumbnail urls found: {image_urls}")
         if len(image_urls) != 0: 
             response_body["thumbnail_urls"] = image_urls
+            response_body["upload_image_tags"] = upload_image_tags
             response["body"] = response_body.__str__()
             return response
             
