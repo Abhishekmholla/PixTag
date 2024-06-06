@@ -36,6 +36,13 @@ body {
     height: 300px;
 }
 
+/* UPLOAD IMAGE */
+
+#upload-image {
+    padding: 30px 50px;
+    height: 300px;
+}
+
 /* SEARCH BY TAGS */
 
 #search-by-tags {
@@ -67,4 +74,8 @@ body {
 
 #output-section {
     padding: 30px 50px;
+}
+
+#image_full {
+    width: 90%;
 }
