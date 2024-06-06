@@ -30,6 +30,9 @@ def run(event, _):
     image_object = s3.get_object(Bucket = bucket, Key = key)
 
     try: 
+        
+        # Resolving user_id
+        user_id = key.split("/")[-2]
     
         # Read image
         print("Reading image to opencv")
@@ -58,7 +61,7 @@ def run(event, _):
         image_string = cv2.imencode('.jpg', resized_image, [cv2.IMWRITE_JPEG_QUALITY, 90])[1].tostring()
         s3.put_object(
             Bucket=bucket,
-            Key=f"{thumbnail_prefix}/{key.split('/')[-1]}",
+            Key=f"{thumbnail_prefix}/{user_id}/{key.split('/')[-1]}",
             Body=image_string
         )
         
