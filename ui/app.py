@@ -271,25 +271,30 @@ def add_delete_tags():
             if tags.strip() == "" or urls.strip() == "":
                 return render_template("home.html", error = True, error_message = "Tags can not be empty.")
             
+            # Converting tags and url list into a list
             tags_list = [tag.strip() for tag in tags.split(";")]
             log.info(f"List of tags to query on: {tags_list}")
             
             url_list = [url.strip() for url in urls.split(";")]
             log.info(f"List of tags to query on: {url_list}")
 
+            # Making the request_body
             request_body = {
                 "url": url_list,
                 "type": int(type_of_operation),
                 "tags" : tags_list
             }
             
+            # Calling the API and fetching the response
             response = requests.post(Endpoints.ADD_REMOVE_BY_THUMBNAIL.value, 
                                     json = request_body,
                                     headers = helper.format_header(app.config['jwt_token']))
             
+            # If the API fails, display the error
             if not response.ok:
                 return render_template("home.html", error = True, error_message = "Tags cannot be updated. Please check the thumbnail urls and try again")
             
+            # Display the rendered output 
             result = helper.get_response_dict(response)
             return render_template(
                 "home.html", 
