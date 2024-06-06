@@ -1,7 +1,6 @@
 import os
 import cv2
 import time
-import uuid
 import boto3
 import base64
 import numpy as np
@@ -199,7 +198,12 @@ def run(event, _):
     # Resolve S3 image upload event parameters
     bucket = event["Records"][0]["s3"]["bucket"]["name"]
     prefix = urllib.parse.unquote_plus(event["Records"][0]["s3"]["object"]["key"], encoding = "utf-8")
-    key = f"{images_prefix}/{prefix.split('/')[-1]}"
+    
+    # Resolving user_id
+    user_id = prefix.split('/')[-2]
+    
+    # Building key
+    key = f"{images_prefix}/{user_id}/{prefix.split('/')[-1]}"
 
     # Get image S3 object
     image_object = s3.get_object(Bucket = bucket, Key = key)
@@ -221,19 +225,26 @@ def run(event, _):
         
         # Perform predictions
         print("Getting predictions")
-        tags = list(set(predict(image, nets, lables)))
+        tags = predict(image, nets, lables)
+        
+        # Get repititions for each tag
+        tags_list = list()
+        for tag in list(set((tags))):
+            tag_count = tags.count(tag)
+            tags_list.append(f"{tag}, {tag_count}")
         
         # Insert item to DynamoDB table
         print(f"Inserting item to DynamoDB table: {ddb_table_name} with tags: {tags}")
-        ddb.put_item(
-            TableName = ddb_table_name, 
-            Item = {
-                "user_id": { "S": str(uuid.uuid4()) },
-                "thumbnail_url": { "S": f"s3://{bucket}/{thumbnails_prefix}/{key.split('/')[-1]}" },
-                "image_url": { "S": f"s3://{bucket}/{key}" },
-                "tags": { "SS": tags }
-            }
-        )
+        if len(tags_list) != 0:
+            ddb.put_item(
+                TableName = ddb_table_name, 
+                Item = {
+                    "user_id": { "S": user_id },
+                    "thumbnail_url": { "S": f"https://{bucket}.s3.amazonaws.com/{thumbnails_prefix}/{user_id}/{key.split('/')[-1]}" },
+                    "image_url": { "S": f"https://{bucket}.s3.amazonaws.com/{key}" },
+                    "tags": { "SS": tags_list }
+                }
+            )
     
     except Exception as e:
         print(f"Exception: {e}")
