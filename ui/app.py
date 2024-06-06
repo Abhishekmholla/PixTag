@@ -1,3 +1,4 @@
+import re
 import auth
 import base64
 import helper
@@ -88,6 +89,9 @@ def search_by_tags():
         
             tags = request.form.get('tags')
             
+                # if not re.search(r'[^\w\s;]', tags) is None:
+                #     return render_template("home.html", error = True, error_message = "Tags need to be seperated by ; colon only")
+                
             if tags.strip() == "":
                 return render_template("home.html", error = True, error_message = "Tags can not be empty.")
             
@@ -257,9 +261,43 @@ def add_delete_tags():
     if request.method == 'POST':
         
         try:
-    
-            print("TODO")
-        
+            
+            # Fetch the tags, urls and type of operation from the user interface
+            tags = request.form.get('tags')
+            urls = request.form.get('urls')
+            type_of_operation = request.form.get('type-of-operation')
+            
+            # Throwing an error incase the text box is empty
+            if tags.strip() == "" or urls.strip() == "":
+                return render_template("home.html", error = True, error_message = "Tags can not be empty.")
+            
+            tags_list = [tag.strip() for tag in tags.split(";")]
+            log.info(f"List of tags to query on: {tags_list}")
+            
+            url_list = [url.strip() for url in urls.split(";")]
+            log.info(f"List of tags to query on: {url_list}")
+
+            request_body = {
+                "url": url_list,
+                "type": int(type_of_operation),
+                "tags" : tags_list
+            }
+            
+            response = requests.post(Endpoints.ADD_REMOVE_BY_THUMBNAIL.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            
+            if not response.ok:
+                return render_template("home.html", error = True, error_message = "Tags cannot be updated. Please check the thumbnail urls and try again")
+            
+            result = helper.get_response_dict(response)
+            return render_template(
+                "home.html", 
+                error = False,
+                message = result['message'],
+                add_delete_tags = True,
+                tags = tags
+            )
         except Exception as e:
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)

@@ -67,7 +67,7 @@
                         <h2>Search By Thumbnail</h2>
                         <p id="subheading">Retrieve full size image using thumbnail url.</p>
                         <p id="description">Provide a S3 thumbnail url of the below format.</p>
-                        <p id="description"><code>https://(bucket-name).s3.amazonaws.com/(prefix).jpg</code></p>
+                        <p id="description">Example -<code> https://(bucket-name).s3.amazonaws.com/(prefix).jpg</code></p>
             
                         <form action = "{{ url_for('search_by_thumbnail') }}" method="post">
                             <md-outlined-text-field name="thumbnail_url" label="Thumbnail URLs"></md-outlined-text-field>
@@ -91,15 +91,39 @@
                     <div id="add-delete-tags">
                         <h2>Add / Delete Tags</h2>
                         <p id="subheading">Add or delete tags for images.</p>
-                        <p id="description">Provide tags to be added or deleted from currently uploaded images.</p>
-            
+                        <p id="description">Provide tags and urls to be added or deleted from the different uploaded images.</p>
+                       
+                        
+                        <p id="description">Example - <code>person, 2; car; apple, 3</code> or
+                            <code>person; car; bus</code></p>
+                        <p id="description">Example -<code> https://(bucket-name).s3.amazonaws.com/(prefix).jpg; https://(bucket-name).s3.amazonaws.com/(prefix_1).jpg</code></p>
                         <form action = "{{ url_for('add_delete_tags') }}" method="post">
-                            <md-outlined-text-field name="tags" label="Tags"></md-outlined-text-field>
-                            <br><br>
-                            <md-filled-button type="submit">Submit</md-filled-button>
+                            <div class="text-field-container">
+                                <md-outlined-text-field name="tags" label="Tags"></md-outlined-text-field>
+                            </div>
+                            <div class="text-field-container">
+                                <md-outlined-text-field name="urls" label="urls"></md-outlined-text-field>
+                            </div>
+                            <div class="toggle-container text-field-container">
+                                <span class="toggle-label">Delete Tag</span>
+                                <label class="md-switch">
+                                  <input type="checkbox" id="type-of-operation"name="type-of-operation" value="1">
+                                  <span class="md-slider round"></span>
+                                </label>
+                                <span class="toggle-label">Add Tag</span>
+                                <input type="hidden" name="type-of-operation" value="0">
+                            </div>       
+                            <div class="text-field-container">           
+                                <md-filled-button type="submit">Submit</md-filled-button>
+                            </div>
                         </form>
                     </div>
-            
+                    <br>
+                    <br>
+                    <br><br><br>
+                    <br>
+                    <br>
+                    <br>
                     <div id="delete-images">
                         <h2>Delete Images</h2>
                         <p id="subheading">Deletes one or more images.</p>
@@ -148,6 +172,11 @@
                         {% for timage in thumbnails %}
                             <img src="data:{{mimetype}};base64, {{timage}}" alt="S3 Image">
                         {% endfor %}
+                    {% endif %}
+
+                    {% if add_delete_tags %}
+                        <p id="description">Below is the message received after completing the operation</p>
+                        <p id="description">Message : <code>{{ message }}</code></p>
                     {% endif %}
 
                     {% if error %}
