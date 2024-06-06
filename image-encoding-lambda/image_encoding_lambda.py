@@ -9,7 +9,7 @@ def run(event, _):
     A lambda function to encode images to base64 string
     """
     
-    images_dict = dict()
+    images_list = list()
     response_body = dict()
     response = dict()
     response["statusCode"] = 200
@@ -30,9 +30,9 @@ def run(event, _):
             image_base64_str = base64.b64encode(image_object['Body'].read())
 
             # Add to dictionary
-            images_dict[key] = image_base64_str
+            images_list.append(image_base64_str)
         
-        response_body["images"] = images_dict
+        response_body["images"] = images_list
         response["body"] = response_body.__str__()
         return response
 
