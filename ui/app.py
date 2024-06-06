@@ -1,13 +1,10 @@
-import boto3
-import base64
 import auth
-from config import Endpoints, Config
+import base64
 import helper
-import requests
 import logging
-from flask import Flask, redirect, request, jsonify, render_template, url_for
-from io import BytesIO
-from base64 import b64encode
+import requests
+from config import Endpoints, Config
+from flask import Flask, redirect, request, render_template, url_for
 
 app = Flask(__name__)
 
@@ -193,11 +190,60 @@ def search_by_thumbnail():
 @app.route('/search-by-image', methods=["POST"])
 def search_by_image():
 
+    s3_image_keys = list()
+    decoded_images = list()
+
     if request.method == 'POST':
         
         try:
     
-            print("TODO")
+            image = request.files['image']
+            if image.filename == "":
+                return render_template("home.html", error = True, error_message = "No image is uploaded.")
+
+            log.info("Encoding image to base64 string")            
+            image_string = base64.b64encode(image.read())
+
+            # Invoking upload image API
+            request_body = {
+                "image": image_string.decode()
+            }
+            image_search_response = requests.post(Endpoints.SEARCH_BY_IMAGE.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            image_search_response = helper.get_response_dict(image_search_response)
+            
+            if "thumbnail_urls" not in image_search_response or len(image_search_response["thumbnail_urls"]) == 0:
+                return render_template("home.html", error = True, error_message = "No thumbnails found for given image.")
+            
+            if "upload_image_tags" in image_search_response and len(image_search_response['upload_image_tags']) != 0:
+                tags = ', '.join(image_search_response['upload_image_tags'])
+
+            for url in image_search_response["thumbnail_urls"]:
+                s3_image_keys.append(url.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
+
+            # Get image base64 encoded strings for all images
+            image_request_body = {
+                "bucket_name": Config.S3_BUCKET_NAME.value,
+                "keys": s3_image_keys
+            }            
+            images_response = requests.post(Endpoints.ENCODE_IMAGE.value, 
+                                    json = image_request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            images_response = helper.get_response_dict(images_response)
+            
+            for image in images_response["images"]:
+                decoded_images.append(image.decode('ascii'))
+
+            return render_template(
+                "home.html", 
+                error = False,
+                mimetype = 'image/jpeg',
+                uploaded_image = image_string.decode(), 
+                tags = tags,
+                thumbnails = decoded_images,
+                search_by_image = True
+            )
         
         except Exception as e:
             log.error(f"Exception: {e}")
