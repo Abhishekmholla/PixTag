@@ -26,9 +26,9 @@ def get_bucketname_and_key(image_url):
     This function fetches the bucketname and key for deletion from the image url
     '''
     # Split the url into parts
-    url_parts = image_url.replace("s3://", "").split("/", 1)
+    url_parts = image_url.replace("https://", "").split("/", 1)
     # Fetch the bucket name and key
-    bucket_name = url_parts[0]
+    bucket_name = url_parts[0].split(".")[0]
     key = url_parts[1]
     return (bucket_name, key)
 
@@ -57,7 +57,7 @@ def run(event, _):
     
     try:
         # user_id = event['requestContext']['authorizer']['claims']['cognito:username']
-        user_id = "bd4b7a2c-7bd1-427f-8655-936872fe0fe4"
+        user_id = "44d8f4a8-10d1-7091-d357-8b5442f9ce4e"
         request_body = eval(event['body'])
 
         # For all the urls in the request body
