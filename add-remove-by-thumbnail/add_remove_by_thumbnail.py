@@ -6,27 +6,22 @@ ddb = boto3.resource('dynamodb')
 ddb_table_name = "images"
 table = ddb.Table(ddb_table_name)
 
-def update_ddb(user_id, thumbnail_url, current_tags):
+def add_ddb(user_id, thumbnail_url, current_tags):
     '''
     This function is to update the dynamodb table
     '''
+    # DynamoDB put_item operation
+    response = table.put_item(
+        Item={
+            'user_id': user_id,
+            'thumbnail_url':thumbnail_url, # Replace with your actual primary key
+            'tags': current_tags  # DynamoDB SDK expects a list for the string set
+        }
+    )
     
-    # Updating the dynamodb table
-    update_response = table.update_item(
-        Key={
-                "user_id":user_id,
-                'thumbnail_url':thumbnail_url
-            },
-            UpdateExpression='SET tags = :val',
-               ExpressionAttributeValues={
-                    ':val': current_tags
-            },
-            ReturnValues="UPDATED_NEW"
-        )
-
     # returning true on postive update
     return (True,f"Records updated successfully for the user with user_id {user_id} and thumbnail_url:{thumbnail_url}")
-        
+
 def get_records(user_id, thumbnail_url):
     '''
     This function is to fetch the records related to the user and thumbnail user provided
@@ -56,10 +51,15 @@ def update_tag_by_thumbnail(user_id, request_body):
             return (False,f"No records found for the user with user_id: {user_id} and thumbnail url: {thumbnail_url}")
         
         # Fetching the existing tags for the image
-        current_tags = records['Items'][0]['tags'] 
+        current_tags = list(records['Items'][0]['tags'])
+        
+        modified_tags = current_tags.copy()
+        
+        # Extract only the names from each string
+        object_names = [item.split(', ')[0] for item in current_tags]  # Split on comma and space, and take the first part
         
         # If the request is deletion and the tag requested does not exist as the current tag list then returning error
-        if request_body['type'] == 0 and not set(request_body['tags']).issubset(current_tags):
+        if request_body['type'] == 0 and not set(request_body['tags']).issubset(object_names):
             return (False,f"Tag: {set(request_body['tags'])} requested for deletion not found for the thumbnail_url: {thumbnail_url}")
         
         # Validating if trying to delete all the tags related to the image
@@ -71,15 +71,56 @@ def update_tag_by_thumbnail(user_id, request_body):
         
         # If the type is 1 then it is addition of tags else it is deletion of tags 
         if request_body['type'] == 1:
+            # For all the tags in the request body
+            for tag in request_body['tags']:
+                found = False
+                # For all the tags in the database
+                for index, item in enumerate(current_tags):
+                    # Splitting the data across the delimiter
+                    parts = item.split(", ")
+                    stored_tag = parts[0]
+                    value = int(parts[1])
+                    
+                    # If the currrent tag is not same as the stored tag, then skip
+                    if tag.lower() != stored_tag.lower():
+                        continue
+                    
+                    # Else, the tag is found and update the value of the tags
+                    value +=1
+                    modified_tags[index] = f'{tag.lower()}, {value}'
+                    found = True    
+                    break
+                
+                # If the tag is not found at all, then append into the main list
+                if not found:
+                    modified_tags.append(f"{tag.lower()}, 1")
+            
+     
             # Updating the current_tags set
-            current_tags.update(request_body['tags'])
+            current_tags = set(modified_tags)
         elif request_body['type'] == 0:
             # Updating the current_tags set
             for tag in request_body['tags']:
-                current_tags.discard(tag)
-
+                # For all the tags in the database
+                for index, item in enumerate(current_tags):
+                    # Splitting the data across the delimiter
+                    parts = item.split(", ")
+                    stored_tag = parts[0]
+                    value = int(parts[1])
+                    
+                    # If the currrent tag is not same as the stored tag, then skip
+                    if tag.lower() != stored_tag.lower():
+                        continue
+                    
+                    # Removing the item under consideration from the modified_tags list
+                    modified_tags.remove(item)
+                    break
+                
+            # Updating the current_tags set      
+            current_tags = set(modified_tags)
+            
         # Updating the dynamodb   
-        return update_ddb(user_id, thumbnail_url, current_tags)
+        return add_ddb(user_id, thumbnail_url, current_tags)
 
 def validate_request_for_deletion(request_body, current_tags):
     '''
