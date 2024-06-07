@@ -165,9 +165,8 @@
                         <p id="description">Below are the images available for tags: <code>{{ tags }}</code></p>
                         {% for image in images %}
                             <img src="data:{{mimetype}};base64, {{image}}" alt="S3 Image">
-                    
-                            <p id="description" style="margin-top: 20px;" >Thumbnail URLS: <code>{{ thumbnail_urls }}</code></p>
                         {% endfor %}
+                        <p id="description" style="margin-top: 20px;" >Thumbnail URLS: <code>{{ thumbnail_urls }}</code></p>
                     {% endif %}
 
                     {% if search_by_thumbnail %}
@@ -187,6 +186,7 @@
                         {% for timage in thumbnails %}
                             <img src="data:{{mimetype}};base64, {{timage}}" alt="S3 Image">
                         {% endfor %}
+                        <p id="description" style="margin-top: 20px;" >Thumbnail URLS: <code>{{ thumbnail_urls }}</code></p>
                     {% endif %}
 
                     {% if add_delete_tags %}
@@ -198,7 +198,6 @@
                     {% if delete_image %}
                         <p id="description">Below is the message received after completing the operation</p>
                         <p id="description">Message : <code>{{ message }}</code></p>
-                        <p id="description">Updated Thumbnail Urls:<code> {{ deleted_image_url }} </code></p>
                     {% endif %}
                     {% if subscribe_tags %}
                         <p id="description">Below is the message received after completing the operation</p>
