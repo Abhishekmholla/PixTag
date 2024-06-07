@@ -60,8 +60,8 @@
                             pass your input as given below where images with minimum of 2 persons
                             3 apples and 1 car will be retrieved.
                         </p>
-                        <p id="description">Example - <code>person, 2; car; apple, 3</code> or
-                            <code>person; car; bus</code></p>
+                        <p id="description">Example - <code>person, 2;car;apple, 3</code> or
+                            <code>person;car;bus</code></p>
             
                         <form action = "{{ url_for('search_by_tags') }}" method="post">
                             <md-outlined-text-field name="tags" label="Tags" required></md-outlined-text-field>
@@ -165,6 +165,8 @@
                         <p id="description">Below are the images available for tags: <code>{{ tags }}</code></p>
                         {% for image in images %}
                             <img src="data:{{mimetype}};base64, {{image}}" alt="S3 Image">
+                    
+                            <p id="description" style="margin-top: 20px;" >Thumbnail URLS: <code>{{ thumbnail_urls }}</code></p>
                         {% endfor %}
                     {% endif %}
 
