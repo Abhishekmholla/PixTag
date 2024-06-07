@@ -472,12 +472,12 @@ def add_user_tag_subscription():
             if tags.strip() == "":
                 return render_template("home.html", error = True, error_message = "tags can not be empty.")
 
-            url_list = [tags.strip() for url in tags.split(";")]
-            log.info(f"List of tags to query on: {url_list}")
+            tags_list = [tags.strip() for url in tags.split(";")]
+            log.info(f"List of tags to query on: {tags_list}")
 
             # Making the request_body
             request_body = {
-                "tags": tags
+                "tags": tags_list
             }
 
             # Calling the API and fetching the response
