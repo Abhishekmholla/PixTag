@@ -200,6 +200,11 @@
                         <p id="description">Message : <code>{{ message }}</code></p>
                         <p id="description">Updated Thumbnail Urls:<code> {{ deleted_image_url }} </code></p>
                     {% endif %}
+                    {% if subscribe_tags %}
+                        <p id="description">Below is the message received after completing the operation</p>
+                        <p id="description">Message : <code>{{ message }}</code></p>
+                        <p id="description">Subscribed Tags:<code> {{ tags }} </code></p>
+                    {% endif %}
                     {% if error %}
                         <p id="description">{{ error_message }}</p>
                     {% endif %}
