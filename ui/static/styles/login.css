@@ -2,20 +2,19 @@ body {
     font-family: "Comfortaa", sans-serif !important;
 }
 
-/* div {
-    margin: 40px;
-    display: flex;
-    justify-content: center;
-} */
-
 .header {
     padding: 50px;
     height: 150px;
     font-size: 2.5rem !important;
 }
-/* form {
-    display: flex;
-    flex-direction: column;
+
+.button-container {
+    display: flex; 
+    justify-content: space-around; 
     align-items: center;
-    gap: 16px;
-} */
+}
+
+.button-container .btn {
+    flex: 1; 
+    margin: 5px; 
+}

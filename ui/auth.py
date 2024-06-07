@@ -63,9 +63,26 @@ def sign_up(givenname,familyname, password, email):
         )
     except cognito_client.exceptions.UsernameExistsException as e:
         print(e)
-        return (False, "User already exists. Please use a different email for signup")
+        raise Exception("User already exists. Please use a different email for signup")
     except Exception as e:
         print(e)
-        return (False,"Sign up unsuccessful. Can you please try with a different email address")
+        raise Exception("Sign up unsuccessful. Can you please try with a different email address")
+    return "Sign up successful. User needs to confirm email address"
 
-    return (True, "Sign up successful. User needs to confirm email address")
+def verify_user(email, verification_code):
+    try:
+        cognito_client.confirm_sign_up(
+            ClientId= Config.CLIENT_ID.value,
+            Username= email,
+            ConfirmationCode=verification_code,
+        )
+    except cognito_client.exceptions.UserNotFoundException as e:
+        print(e)
+        raise Exception("User not found. Please try signing up with different email")
+    except cognito_client.exceptions.CodeMismatchException:
+        print(e)
+        raise Exception("Invalid verification code. Please provide a proper verification code")
+    except Exception as e:
+        print(e)
+        raise Exception("Verification unsuccessful. Please provide a proper verification code")
+    return "Verification Successful"

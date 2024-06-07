@@ -24,7 +24,9 @@
     <body>
 
         <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
-            <h1>PixTag</h1>
+            <a href="/pixtag" style="text-decoration: none; color: inherit;">
+                <h1>PixTag</h1>
+            </a>
             <form action="{{ url_for('sign_out') }}" method="post" style="margin: 0;">
                 <button type="submit" class="btn btn-warning">Sign Out</button>
             </form>
@@ -138,7 +140,7 @@
                             <md-filled-button type="submit">Delete</md-filled-button>
                         </form>
                     </div>
-                
+                    
                 </div>
 
                 <div id="output-section" class="col-6">
