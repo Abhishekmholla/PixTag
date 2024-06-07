@@ -34,6 +34,18 @@ body {
 .header {
     padding: 50px;
     height: 300px;
+    display: flex;             
+    align-items: center;        
+    justify-content: space-between; 
+}
+
+.header h1 {
+  margin: 0;                  
+  padding-right: 10px;        
+}
+
+.header form {
+  margin: 0;                  
 }
 
 /* UPLOAD IMAGE */

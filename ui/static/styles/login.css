@@ -1,15 +1,18 @@
 body {
-    height: 100%;
-    width: 100%;
-    background-color: rgb(93, 218, 218);
+    font-family: "Comfortaa", sans-serif !important;
 }
 
-div {
+/* div {
     margin: 40px;
     display: flex;
     justify-content: center;
-}
+} */
 
+.header {
+    padding: 50px;
+    height: 150px;
+    font-size: 2.5rem !important;
+}
 /* form {
     display: flex;
     flex-direction: column;

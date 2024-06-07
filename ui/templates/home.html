@@ -1,5 +1,6 @@
 <html>
     <head>
+        <title> PixTag</title>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,9 +23,13 @@
     </head>
     <body>
 
-        <div class="header">
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
             <h1>PixTag</h1>
+            <form action="{{ url_for('sign_out') }}" method="post" style="margin: 0;">
+                <button type="submit" class="btn btn-warning">Sign Out</button>
+            </form>
         </div>
+        
 
         <md-divider></md-divider>
 
@@ -92,8 +97,6 @@
                         <h2>Add / Delete Tags</h2>
                         <p id="subheading">Add or delete tags for images.</p>
                         <p id="description">Provide tags and urls to be added or deleted from the different uploaded images.</p>
-                       
-                        
                         <p id="description">Example - <code>person;car;apple</code> 
                         <p id="description">Example -<code> https://(bucket-name).s3.amazonaws.com/(prefix).jpg; https://(bucket-name).s3.amazonaws.com/(prefix_1).jpg</code></p>
                         <form action = "{{ url_for('add_delete_tags') }}" method="post">
@@ -101,7 +104,7 @@
                                 <md-outlined-text-field name="tags" label="Tags"></md-outlined-text-field>
                             </div>
                             <div class="text-field-container">
-                                <md-outlined-text-field name="urls" label="urls"></md-outlined-text-field>
+                                <md-outlined-text-field name="urls" label="Urls"></md-outlined-text-field>
                             </div>
                             <div class="toggle-container text-field-container">
                                 <span class="toggle-label">Delete Tag</span>
@@ -128,7 +131,7 @@
                         <p id="subheading">Deletes one or more images.</p>
                         <p id="description">Please note that all entries from <code>DynamoDB</code> and <code>S3</code>
                         will be deleted for the provided urls.</p>
-            
+                        <p id="description">Example -<code> https://(bucket-name).s3.amazonaws.com/(prefix).jpg; https://(bucket-name).s3.amazonaws.com/(prefix_1).jpg</code></p>
                         <form action = "{{ url_for('delete_images') }}" method="post">
                             <md-outlined-text-field name="urls" label="Image URLs"></md-outlined-text-field>
                             <br><br>
@@ -176,8 +179,14 @@
                     {% if add_delete_tags %}
                         <p id="description">Below is the message received after completing the operation</p>
                         <p id="description">Message : <code>{{ message }}</code></p>
+                        <p id="description">Updated Tags:<code> {{ tags }} </code></p>
+                        <p id="description">Updated Thumbnail Urls:<code> {{ thumbnail_url }} </code></p>
                     {% endif %}
-
+                    {% if delete_image %}
+                        <p id="description">Below is the message received after completing the operation</p>
+                        <p id="description">Message : <code>{{ message }}</code></p>
+                        <p id="description">Updated Thumbnail Urls:<code> {{ deleted_image_url }} </code></p>
+                    {% endif %}
                     {% if error %}
                         <p id="description">{{ error_message }}</p>
                     {% endif %}
