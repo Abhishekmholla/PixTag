@@ -1,5 +1,4 @@
 import boto3
-from flask import render_template
 from config import Config
 
 cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
@@ -50,6 +49,7 @@ def sign_up(givenname,familyname, password, email):
     """
     try:
         
+        # Defining the user attributes
         user_attributes = [{'Name': 'email', 'Value': email},
                         {'Name': 'given_name', 'Value': givenname},
                         {'Name': 'family_name', 'Value': familyname}]
@@ -70,7 +70,20 @@ def sign_up(givenname,familyname, password, email):
     return "Sign up successful. User needs to confirm email address"
 
 def verify_user(email, verification_code):
+    """
+    AWS Cognito verify user functionality
+
+    Parameters
+    ----------
+    :param verification code: code for verification
+    :param email: Email of the new user
+
+    Returns
+    -------
+    :return: User verified or error message
+    """
     try:
+        # Verify the user code and throw error if issues caused
         cognito_client.confirm_sign_up(
             ClientId= Config.CLIENT_ID.value,
             Username= email,
