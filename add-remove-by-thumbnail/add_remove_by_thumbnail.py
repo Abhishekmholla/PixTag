@@ -6,7 +6,7 @@ ddb = boto3.resource('dynamodb')
 ddb_table_name = "images"
 table = ddb.Table(ddb_table_name)
 
-def add_ddb(user_id, thumbnail_url, current_tags):
+def add_ddb(user_id, thumbnail_url, current_tags, image_url):
     '''
     This function is to update the dynamodb table
     '''
@@ -14,8 +14,9 @@ def add_ddb(user_id, thumbnail_url, current_tags):
     response = table.put_item(
         Item={
             'user_id': user_id,
-            'thumbnail_url':thumbnail_url, # Replace with your actual primary key
-            'tags': current_tags  # DynamoDB SDK expects a list for the string set
+            'thumbnail_url':thumbnail_url, 
+            'image_url': image_url,
+            'tags': current_tags  
         }
     )
     
@@ -52,6 +53,8 @@ def update_tag_by_thumbnail(user_id, request_body):
         
         # Fetching the existing tags for the image
         current_tags = list(records['Items'][0]['tags'])
+        
+        image_url = records['Items'][0]['image_url']
         
         modified_tags = current_tags.copy()
         
@@ -120,7 +123,7 @@ def update_tag_by_thumbnail(user_id, request_body):
             current_tags = set(modified_tags)
             
         # Updating the dynamodb   
-        return add_ddb(user_id, thumbnail_url, current_tags)
+        return add_ddb(user_id, thumbnail_url, current_tags, image_url)
 
 def validate_request_for_deletion(request_body, current_tags):
     '''
@@ -139,8 +142,8 @@ def run(event, _):
 
     try:
 
-        # user_id = event['requestContext']['authorizer']['claims']['cognito:username']
-        user_id = "44d8f4a8-10d1-7091-d357-8b5442f9ce4e"
+        user_id = event['requestContext']['authorizer']['claims']['cognito:username']
+        # user_id = "44d8f4a8-10d1-7091-d357-8b5442f9ce4e"
         
         # Fetching the request bidy
         request_body = eval(event['body'])
