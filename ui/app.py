@@ -26,6 +26,7 @@ def sign_in():
             token = auth.sign_in(username, password)
             log.info("Adding token to app config on successful sign-in")
             app.config["jwt_token"] = token
+            session['logged_in'] = True
             return redirect(url_for('home'))
         except Exception as e:
             log.error(f"Exception: {e}")
@@ -112,7 +113,8 @@ def sign_out():
     """
     if request.method == 'POST':
         try:
-            session.clear()
+            # session.clear()
+            session['logged_in'] = False
             app.config["jwt_token"] = ""
             return redirect(url_for('login_user', message = "It is sad to see you go...cya!!", 
                             show_modal_flag = True))
@@ -125,9 +127,15 @@ def home():
     """
     Landing page API for PixTag
     """
-    return render_template("home.html", error = False)
+    is_logged_in = session.get('logged_in')
+    
+    print(is_logged_in)
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
-@app.route('/upload-image', methods=["POST"])
+@app.route('/pixtag/upload-image', methods=["GET","POST"])
 def upload_image():
     '''
     API to upload image 
@@ -165,9 +173,9 @@ def upload_image():
             log.error(f"Error during image upload. Please check logs. Exception{e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/search-by-tags', methods=["POST"])
+@app.route('/pixtag/search-by-tags', methods=["GET","POST"])
 def search_by_tags():
     '''
     API to search by tags
@@ -179,8 +187,8 @@ def search_by_tags():
     
     if request.method == 'POST':
         
-        try:
         
+        try:
             tags = request.form.get('tags')
                 
             if tags.strip() == "":
@@ -230,14 +238,14 @@ def search_by_tags():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/search-by-thumbnail', methods=["POST"])
+@app.route('/pixtag/search-by-thumbnail', methods=["GET","POST"])
 def search_by_thumbnail():
     '''
     API to search by thumbnail
     '''
-
+    print(app.config['jwt_token'])
     if request.method == 'POST':
         
         try:
@@ -268,7 +276,6 @@ def search_by_thumbnail():
                                     json = image_request_body,
                                     headers = helper.format_header(app.config['jwt_token']))
             images_response = helper.get_response_dict(images_response)
-            print(images_response)
 
             return render_template(
                 "home.html", 
@@ -284,9 +291,9 @@ def search_by_thumbnail():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/search-by-image', methods=["POST"])
+@app.route('/pixtag/search-by-image', methods=["GET","POST"])
 def search_by_image():
     '''
     API to search by image
@@ -315,6 +322,7 @@ def search_by_image():
                                     headers = helper.format_header(app.config['jwt_token']))
             image_search_response = helper.get_response_dict(image_search_response)
             
+            
             if "thumbnail_urls" not in image_search_response or len(image_search_response["thumbnail_urls"]) == 0:
                 return render_template("home.html", error = True, error_message = "No thumbnails found for given image.")
             
@@ -324,6 +332,7 @@ def search_by_image():
             for url in image_search_response["thumbnail_urls"]:
                 s3_image_keys.append(url.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
 
+            print(s3_image_keys)
             # Get image base64 encoded strings for all images
             image_request_body = {
                 "bucket_name": Config.S3_BUCKET_NAME.value,
@@ -344,16 +353,17 @@ def search_by_image():
                 uploaded_image = image_string.decode(), 
                 tags = tags,
                 thumbnails = decoded_images,
-                search_by_image = True
+                search_by_image = True,
+                thumbnail_urls = image_search_response["thumbnail_urls"]
             )
         
         except Exception as e:
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/add-delete-tags', methods=["POST"])
+@app.route('/pixtag/add-delete-tags', methods=["GET","POST"])
 def add_delete_tags():
     '''
     API to delete tags
@@ -407,9 +417,9 @@ def add_delete_tags():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/delete-image', methods=["POST","DELETE"])
+@app.route('/pixtag/delete-image', methods=["GET","POST","DELETE"])
 def delete_images():
     '''
     API to delete images
@@ -456,9 +466,9 @@ def delete_images():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
-@app.route('/subscribe-tag', methods=["POST","DELETE"])
+@app.route('/pixtag/subscribe-tag', methods=["POST","GET"])
 def add_user_tag_subscription():
     '''
     API to subscribe to tags
@@ -502,7 +512,7 @@ def add_user_tag_subscription():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return render_template("home.html", error = False)
+    return redirect(url_for('login_user'))
 
 
 if __name__ == '__main__':
