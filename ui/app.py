@@ -175,7 +175,8 @@ def search_by_tags():
     
     s3_image_keys = list()
     decoded_images = list()
-
+    all_found_tags = list()
+    
     if request.method == 'POST':
         
         try:
@@ -200,8 +201,8 @@ def search_by_tags():
 
             for link in tags_response["links"]:
                 s3_image_keys.append(link.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
-
-            print(tags_response)
+                all_found_tags.append(link)
+            
             # Get image base64 encoded strings for all images
             image_request_body = {
                 "bucket_name": Config.S3_BUCKET_NAME.value,
@@ -221,7 +222,8 @@ def search_by_tags():
                 mimetype = 'image/jpeg',
                 images = decoded_images,
                 search_by_tag = True,
-                tags = tags
+                tags = tags,
+                thumbnail_urls = all_found_tags
             )
         
         except Exception as e:
