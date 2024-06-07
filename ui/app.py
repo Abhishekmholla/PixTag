@@ -1,3 +1,4 @@
+import secrets
 import auth
 import base64
 import helper
@@ -7,7 +8,7 @@ from config import Endpoints, Config
 from flask import Flask, redirect, request, render_template, session, url_for
 
 app = Flask(__name__)
-
+app.secret_key = secrets.token_urlsafe(24)
 logging.basicConfig(level = logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -55,8 +56,6 @@ def sign_up_user():
     '''
     API to sign up the user
     '''
-    response_flag = False
-    response_message = ""
     if request.method == 'POST':
         try:
             givenname = request.form.get('givenname')
@@ -64,13 +63,29 @@ def sign_up_user():
             password = request.form.get('password')
             email =  request.form.get('email')
             
+            session['email'] = email
             log.info("Creating new user")
-            _, response_message = auth.sign_up(givenname,familyname, password, email)
-            print(response_message)
+            _ = auth.sign_up(givenname,familyname, password, email)
+        except Exception as e:   
+            log.error(f"Exception: {e}")
+            return render_template('login.html', error = True,
+                                   message = e,show_modal_flag = True)
+    
+    return render_template('verification.html', error= False)
+
+@app.route('/verify-email', methods=['GET', 'POST'])
+def verify_email():
+    response_message = ""
+    if request.method == 'POST':
+        try:
+            verification_code = request.form.get('verifyemail')
+            email = session.get('email')
+            log.info("Verifying new user")
+            _, response_message = auth.verify_user(email, verification_code)
         except Exception as e:
             log.error(f"Exception: {e}")
-            return render_template('login.html', error = True)
-        
+            return render_template('verification.html', error = False,message = e,
+                           show_modal_flag = True)
     return render_template('login.html',
                            error = False,
                            message = response_message,
@@ -84,8 +99,8 @@ def sign_out():
     """
     if request.method == 'POST':
         try:
+            session.clear()
             app.config["jwt_token"] = ""
-            print("logout Don")
             return redirect(url_for('login_user', message = "It is sad to see you go...cya!!", 
                             show_modal_flag = True))
         except Exception as e:
@@ -104,7 +119,6 @@ def upload_image():
     '''
     API to upload image 
     '''
-    
     if request.method == 'POST':
         
         try:
