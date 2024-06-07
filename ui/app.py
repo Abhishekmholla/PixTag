@@ -1,11 +1,10 @@
-import re
 import auth
 import base64
 import helper
 import logging
 import requests
 from config import Endpoints, Config
-from flask import Flask, redirect, request, render_template, url_for
+from flask import Flask, redirect, request, render_template, session, url_for
 
 app = Flask(__name__)
 
@@ -28,20 +27,83 @@ def sign_in():
             return redirect(url_for('home'))
         except Exception as e:
             log.error(f"Exception: {e}")
-            return render_template('login.html', error = True)
+            return render_template('login.html', error = False,
+                           message = "Sign in unsuccessful. Have you verified the email address or not?",
+                           show_modal_flag = True)
     
-    return render_template('login.html')
+    return render_template('login.html',error = False)
 
+@app.route('/sign-up', methods=['GET', 'POST'])
+def sign_up():
+    '''
+    API to render the signup template
+    '''
+    return render_template('signup.html')
+
+@app.route('/login-user', methods=['GET', 'POST'])
+def login_user():
+    '''
+    API to render the login template
+    '''
+    message = request.args.get('message', "")
+    show_modal_flag = request.args.get('show_modal_flag', False)
+    return render_template('login.html', error = False,
+                           message = message, show_modal_flag = show_modal_flag)
+
+@app.route('/sign-up-user', methods=['GET', 'POST'])
+def sign_up_user():
+    '''
+    API to sign up the user
+    '''
+    response_flag = False
+    response_message = ""
+    if request.method == 'POST':
+        try:
+            givenname = request.form.get('givenname')
+            familyname = request.form.get('familyname')
+            password = request.form.get('password')
+            email =  request.form.get('email')
+            
+            log.info("Creating new user")
+            _, response_message = auth.sign_up(givenname,familyname, password, email)
+            print(response_message)
+        except Exception as e:
+            log.error(f"Exception: {e}")
+            return render_template('login.html', error = True)
+        
+    return render_template('login.html',
+                           error = False,
+                           message = response_message,
+                           show_modal_flag = True
+                           )
+
+@app.route('/sign-out', methods=['GET', 'POST'])
+def sign_out():
+    """
+    API to sign out of PixTag
+    """
+    if request.method == 'POST':
+        try:
+            app.config["jwt_token"] = ""
+            print("logout Don")
+            return redirect(url_for('login_user', message = "It is sad to see you go...cya!!", 
+                            show_modal_flag = True))
+        except Exception as e:
+            log.error(f"Exception: {e}")
+            return render_template('login.html', error = True)
+ 
 @app.route('/pixtag', methods=['GET'])
 def home():
     """
     Landing page API for PixTag
     """
-
     return render_template("home.html", error = False)
 
 @app.route('/upload-image', methods=["POST"])
 def upload_image():
+    '''
+    API to upload image 
+    '''
     
     if request.method == 'POST':
         
@@ -79,6 +141,9 @@ def upload_image():
 
 @app.route('/search-by-tags', methods=["POST"])
 def search_by_tags():
+    '''
+    API to search by tags
+    '''
     
     s3_image_keys = list()
     decoded_images = list()
@@ -88,9 +153,6 @@ def search_by_tags():
         try:
         
             tags = request.form.get('tags')
-            
-                # if not re.search(r'[^\w\s;]', tags) is None:
-                #     return render_template("home.html", error = True, error_message = "Tags need to be seperated by ; colon only")
                 
             if tags.strip() == "":
                 return render_template("home.html", error = True, error_message = "Tags can not be empty.")
@@ -142,6 +204,9 @@ def search_by_tags():
 
 @app.route('/search-by-thumbnail', methods=["POST"])
 def search_by_thumbnail():
+    '''
+    API to search by thumbnail
+    '''
 
     if request.method == 'POST':
         
@@ -193,6 +258,9 @@ def search_by_thumbnail():
 
 @app.route('/search-by-image', methods=["POST"])
 def search_by_image():
+    '''
+    API to search by image
+    '''
 
     s3_image_keys = list()
     decoded_images = list()
@@ -257,6 +325,9 @@ def search_by_image():
 
 @app.route('/add-delete-tags', methods=["POST"])
 def add_delete_tags():
+    '''
+    API to delete tags
+    '''
 
     if request.method == 'POST':
         
@@ -294,14 +365,13 @@ def add_delete_tags():
             if not response.ok:
                 return render_template("home.html", error = True, error_message = "Tags cannot be updated. Please check the thumbnail urls and try again")
             
-            # Display the rendered output 
-            result = helper.get_response_dict(response)
             return render_template(
                 "home.html", 
                 error = False,
-                message = result['message'],
+                message = "Records updated successfully",
                 add_delete_tags = True,
-                tags = tags
+                tags = tags,
+                thumbnail_url = urls
             )
         except Exception as e:
             log.error(f"Exception: {e}")
@@ -309,15 +379,49 @@ def add_delete_tags():
     
     return render_template("home.html", error = False)
 
-@app.route('/delete-image', methods=["POST"])
+@app.route('/delete-image', methods=["POST","DELETE"])
 def delete_images():
+    '''
+    API to delete images
+    '''
 
     if request.method == 'POST':
         
         try:
-    
-            print("TODO")
-        
+            
+            # Fetch the tags, urls and type of operation from the user interface
+            urls = request.form.get('urls')
+
+            # Throwing an error incase the text box is empty
+            if urls.strip() == "":
+                return render_template("home.html", error = True, error_message = "urls can not be empty.")
+
+            url_list = [url.strip() for url in urls.split(";")]
+            log.info(f"List of tags to query on: {url_list}")
+
+            # Making the request_body
+            request_body = {
+                "url": url_list
+            }
+
+            # Calling the API and fetching the response
+            response = requests.delete(Endpoints.DELETE_IMAGE.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            
+            # # If the API fails, display the error
+            if not response.ok:
+                return render_template("home.html", error = True, error_message = "Tags cannot be updated. Please check the thumbnail urls and try again")
+            
+            # Rendering the template 
+            return render_template(
+                "home.html", 
+                error = False,
+                message = "Images deleted successfully",
+                delete_image = True,
+                deleted_image_url = urls
+            )
+            
         except Exception as e:
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
