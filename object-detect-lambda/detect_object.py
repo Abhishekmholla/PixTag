@@ -241,7 +241,7 @@ def run(event, _):
                 Item = {
                     "user_id": { "S": user_id },
                     "thumbnail_url": { "S": f"https://{bucket}.s3.amazonaws.com/{thumbnails_prefix}/{user_id}/{key.split('/')[-1]}" },
-                    "image_url": { "S": f"https://{bucket}.s3.amazonaws.com/{key}" },
+                    "image_url": { "S": f"https://{bucket}.s3.amazonaws.com/{images_prefix}/{user_id}/{key.split('/')[-1]}" },
                     "tags": { "SS": tags_list }
                 }
             )
