@@ -62,8 +62,10 @@ def sign_up(givenname,familyname, password, email):
             UserAttributes=user_attributes
         )
     except cognito_client.exceptions.UsernameExistsException as e:
+        print(e)
         return (False, "User already exists. Please use a different email for signup")
     except Exception as e:
+        print(e)
         return (False,"Sign up unsuccessful. Can you please try with a different email address")
 
     return (True, "Sign up successful. User needs to confirm email address")
