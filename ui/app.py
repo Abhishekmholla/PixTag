@@ -20,6 +20,7 @@ def sign_in():
 
     if request.method == 'POST':
         try:
+            # Fetch the token by signin to application
             username = request.form.get('username')
             password = request.form.get('password')
             token = auth.sign_in(username, password)
@@ -58,6 +59,7 @@ def sign_up_user():
     '''
     if request.method == 'POST':
         try:
+            # Fetch the required details and create a new user
             givenname = request.form.get('givenname')
             familyname = request.form.get('familyname')
             password = request.form.get('password')
@@ -65,27 +67,38 @@ def sign_up_user():
             
             session['email'] = email
             log.info("Creating new user")
-            _ = auth.sign_up(givenname,familyname, password, email)
+            
+            # Signing in the user
+            auth.sign_up(givenname,familyname, password, email)
         except Exception as e:   
+            #  If any errors redirect the user to login page
             log.error(f"Exception: {e}")
             return render_template('login.html', error = True,
                                    message = e,show_modal_flag = True)
     
+    # If all good, load the verification template
     return render_template('verification.html', error= False)
 
 @app.route('/verify-email', methods=['GET', 'POST'])
 def verify_email():
+    '''
+    API to verify the user
+    '''
     response_message = ""
     if request.method == 'POST':
         try:
+            # Fetch the details
             verification_code = request.form.get('verifyemail')
             email = session.get('email')
             log.info("Verifying new user")
-            _, response_message = auth.verify_user(email, verification_code)
+            # Verify the user 
+            response_message = auth.verify_user(email, verification_code)
         except Exception as e:
+            # Send an error message as modal to UI
             log.error(f"Exception: {e}")
             return render_template('verification.html', error = False,message = e,
                            show_modal_flag = True)
+    # If all good, redirect user to login page
     return render_template('login.html',
                            error = False,
                            message = response_message,
@@ -138,7 +151,8 @@ def upload_image():
                                     json = request_body,
                                     headers = helper.format_header(app.config['jwt_token']))
             upload_response = helper.get_response_dict(upload_response)
-        
+
+           
             return render_template(
                 "home.html", 
                 error = False,
@@ -187,7 +201,7 @@ def search_by_tags():
             for link in tags_response["links"]:
                 s3_image_keys.append(link.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
 
-            
+            print(tags_response)
             # Get image base64 encoded strings for all images
             image_request_body = {
                 "bucket_name": Config.S3_BUCKET_NAME.value,
@@ -441,6 +455,53 @@ def delete_images():
             return render_template("home.html", error = True, error_message = e)
     
     return render_template("home.html", error = False)
+
+@app.route('/subscribe-tag', methods=["POST","DELETE"])
+def add_user_tag_subscription():
+    '''
+    API to subscribe to tags
+    '''
+    if request.method == 'POST':
+        try:
+            # Fetch the tags, urls and type of operation from the user interface
+            tags = request.form.get('tags')
+            
+            # Throwing an error incase the text box is empty
+            if tags.strip() == "":
+                return render_template("home.html", error = True, error_message = "tags can not be empty.")
+
+            url_list = [tags.strip() for url in tags.split(";")]
+            log.info(f"List of tags to query on: {url_list}")
+
+            # Making the request_body
+            request_body = {
+                "tags": tags
+            }
+
+            # Calling the API and fetching the response
+            response = requests.post(Endpoints.SUBSCRIBE_TAGS.value, 
+                                    json = request_body,
+                                    headers = helper.format_header(app.config['jwt_token']))
+            
+            # If the API fails, display the error
+            if not response.ok:
+                return render_template("home.html", error = True, error_message = "Tags cannot be subscribed. Please check the tags and try again")
+            
+            # Rendering the template 
+            return render_template(
+                "home.html", 
+                error = False,
+                message = "Tags subscribed successfully",
+                subscribe_tags = True,
+                tags = tags
+            )
+            
+        except Exception as e:
+            log.error(f"Exception: {e}")
+            return render_template("home.html", error = True, error_message = e)
+    
+    return render_template("home.html", error = False)
+
 
 if __name__ == '__main__':
     app.run(debug = True)

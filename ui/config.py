@@ -15,3 +15,4 @@ class Endpoints(Enum):
     SEARCH_BY_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/search-by-image"
     ADD_REMOVE_BY_THUMBNAIL = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/add-remove-by-thumbnail"
     DELETE_IMAGE = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/delete-image"
+    SUBSCRIBE_TAGS = "https://8nzosr8g61.execute-api.us-east-1.amazonaws.com/pixtag/user-subscription-tags"

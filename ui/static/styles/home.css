@@ -161,5 +161,6 @@ body {
     border-radius: 34px;
   }
   
-  .md-slider.round
-  
+  #subsribe-to-tags {
+    padding: 30px 50px;
+  }
