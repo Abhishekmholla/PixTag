@@ -143,7 +143,6 @@ def run(event, _):
     try:
 
         user_id = event['requestContext']['authorizer']['claims']['cognito:username']
-        # user_id = "44d8f4a8-10d1-7091-d357-8b5442f9ce4e"
         
         # Fetching the request bidy
         request_body = eval(event['body'])

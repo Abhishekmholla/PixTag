@@ -1,3 +1,4 @@
+import json
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -50,7 +51,12 @@ def subscribe_to_topic(email):
     response = sns.subscribe(
         TopicArn=topic_arn,
         Protocol='email',
-        Endpoint=email
+        Endpoint=email,
+        Attributes={
+            'FilterPolicy': json.dumps({
+                'email_id': [email]
+            })
+        }
     )
     
     return response['SubscriptionArn']
@@ -63,7 +69,6 @@ def run(event, _):
     try:
         user_id = event['requestContext']['authorizer']['claims']['cognito:username']
         
-        # user_id = "44d8f4a8-10d1-7091-d357-8b5442f9ce4e"
         request_body = eval(event['body'])
         
          # Fetching the record details from the dynamodb
@@ -79,10 +84,8 @@ def run(event, _):
             
         _,message = add_ddb(user_id, set(subscribed_tags))
         
-        # Get user email id
         user_email = get_user_email_from_user_id(user_id)
         
-        # Subscribe to SNS topic
         subscription_arn = subscribe_to_topic(user_email)
         print("Subscription ARN:", subscription_arn)
         return send_response(200,message)
