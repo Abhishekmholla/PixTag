@@ -5,11 +5,15 @@ from boto3.dynamodb.conditions import Key
 ddb = boto3.resource('dynamodb')
 ddb_table_name = "usertagsubscription"
 table = ddb.Table(ddb_table_name)
+client = boto3.client('cognito-idp', region_name="us-east-1")
+sns = boto3.client('sns')
 
+user_pool_id = "us-east-1_jcJBx2Erg"
+topic_arn = "arn:aws:sns:us-east-1:327379801351:tag-email-notification"
 
 def get_records(user_id):
     '''
-    This function is to fetch the records related to the user
+    This function is to fetch the records related to the user and thumbnail user provided
     '''
     # Fetching the records for the user
     records = table.query(
@@ -23,7 +27,7 @@ def get_records(user_id):
 def add_ddb(user_id, subscribed_tags):
     
     # DynamoDB put_item operation
-    response = table.put_item(
+    _ = table.put_item(
         Item={
             'user_id': user_id,
             'subscribed_tags':subscribed_tags
@@ -32,7 +36,25 @@ def add_ddb(user_id, subscribed_tags):
     
     # returning true on postive update
     return (True,f"Records updated successfully for the user with user_id {user_id} and tags:{subscribed_tags}")
+
+def get_user_email_from_user_id(user_id):
+    response = client.admin_get_user(
+            UserPoolId=user_pool_id,
+            Username=user_id
+        )
+    for attribute in response['UserAttributes']:
+        if attribute['Name'] == 'email':
+            return attribute['Value']
+
+def subscribe_to_topic(email):
+    response = sns.subscribe(
+        TopicArn=topic_arn,
+        Protocol='email',
+        Endpoint=email
+    )
     
+    return response['SubscriptionArn']
+
 def run(event, _):
     """
     This function adds tags subscribed by user
@@ -56,6 +78,13 @@ def run(event, _):
             subscribed_tags.append(tag)
             
         _,message = add_ddb(user_id, set(subscribed_tags))
+        
+        # Get user email id
+        user_email = get_user_email_from_user_id(user_id)
+        
+        # Subscribe to SNS topic
+        subscription_arn = subscribe_to_topic(user_email)
+        print("Subscription ARN:", subscription_arn)
         return send_response(200,message)
     except Exception as e:
         print(f"Failed to add tags for subscription: {e}")
