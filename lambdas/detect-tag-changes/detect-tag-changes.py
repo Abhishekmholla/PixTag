@@ -95,7 +95,6 @@ def run(event, context):
         
         for subscription in list_subs["Subscriptions"]:
             if subscription["Endpoint"] == user_email:
-                print(subscription)
                 subscription_arn = subscription["SubscriptionArn"]
         
         if subscription_arn == "":
@@ -132,7 +131,6 @@ def run(event, context):
                 )
             
         elif event_name == "MODIFY":
-        
         
             deleted_tags = list()
             updated_tags = list()
@@ -184,7 +182,7 @@ def run(event, context):
         response_body["message"] = f"Exception: {e}"
         response["body"] = response_body.__str__()
     
-    response_body["message"] = "No images available for given thumbnail url."
+    response_body["message"] = "No tag changes detected for given thumbnail url."
     response["body"] = response_body.__str__()
 
     return response
