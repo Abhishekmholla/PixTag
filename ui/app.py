@@ -129,7 +129,6 @@ def home():
     """
     is_logged_in = session.get('logged_in')
     
-    print(is_logged_in)
     if not is_logged_in:
         return redirect(url_for('login_user'))
     else:
@@ -245,7 +244,7 @@ def search_by_thumbnail():
     '''
     API to search by thumbnail
     '''
-    print(app.config['jwt_token'])
+    
     if request.method == 'POST':
         
         try:
@@ -263,7 +262,7 @@ def search_by_thumbnail():
                                     json = request_body,
                                     headers = helper.format_header(app.config['jwt_token']))
             url_response = helper.get_response_dict(url_response)
-            print(url_response)
+            
             if "image_url" not in url_response or url_response["image_url"] == "":
                 return render_template("home.html", error = True, error_message = "No images found for given thumbnail url.")
             
@@ -332,7 +331,6 @@ def search_by_image():
             for url in image_search_response["thumbnail_urls"]:
                 s3_image_keys.append(url.split(f"https://{Config.S3_BUCKET_NAME.value}.s3.amazonaws.com/")[1])
 
-            print(s3_image_keys)
             # Get image base64 encoded strings for all images
             image_request_body = {
                 "bucket_name": Config.S3_BUCKET_NAME.value,
