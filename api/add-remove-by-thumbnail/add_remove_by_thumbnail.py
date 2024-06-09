@@ -121,9 +121,11 @@ def update_tag_by_thumbnail(user_id, request_body):
                 
             # Updating the current_tags set      
             current_tags = set(modified_tags)
-            
-        # Updating the dynamodb   
-        return add_ddb(user_id, thumbnail_url, current_tags, image_url)
+
+        # Updating the dynamodb    
+        add_ddb(user_id, thumbnail_url, current_tags, image_url)
+        
+    return (True, f"Records updated successfully for the user with user_id {user_id}")
 
 def validate_request_for_deletion(request_body, current_tags):
     '''
