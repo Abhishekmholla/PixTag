@@ -66,7 +66,6 @@ def run(event, context):
 
     try:
         
-        print(event)
         event_name = event["Records"][0]["eventName"]
         user_id = event["Records"][0]["dynamodb"]["NewImage"]["user_id"]["S"]
         
@@ -96,7 +95,6 @@ def run(event, context):
         
         for subscription in list_subs["Subscriptions"]:
             if subscription["Endpoint"] == user_email:
-                print(subscription)
                 subscription_arn = subscription["SubscriptionArn"]
         
         if subscription_arn == "":
@@ -122,7 +120,7 @@ def run(event, context):
                 img_url = event["Records"][0]["dynamodb"]["NewImage"]["image_url"]["S"]
                 response = sns.publish(
                     TargetArn = topic_arn,
-                    Message = f"Hello there! New image as been uploaded for the tags: {tags_str}. Image URL is: {img_url}",
+                    Message = f"Hello there! New image has been uploaded for the tags: {tags_str}. Image URL is: {img_url}",
                     Subject = f"New image added for {tags_str} tags",
                     MessageAttributes={
                         'email_id': {
@@ -134,18 +132,45 @@ def run(event, context):
             
         elif event_name == "MODIFY":
         
+            deleted_tags = list()
+            updated_tags = list()
             old_image = event["Records"][0]["dynamodb"]["OldImage"]
             new_image = event["Records"][0]["dynamodb"]["NewImage"]
             
             old_tags_raw = old_image["tags"]["SS"]
             new_tags_raw = new_image["tags"]["SS"]
         
-            for new_tag in new_tags_raw:
-                n_tag_name, n_tag_count = resolve_tags(new_tag)
-                for old_tag in old_tags_raw:
-                    o_tag_name, o_tag_count = resolve_tags(old_tag)
-                    if n_tag_name == o_tag_name and n_tag_name in subscribed_tags:
-                        tags_list.append(tag_name)
+            deleted_tags_raw = list(set(old_tags_raw) - set(new_tags_raw))
+            updated_tags_raw = list(set(new_tags_raw) - set(old_tags_raw))
+        
+            for d_tag in deleted_tags_raw:
+                d_tag_name, d_tag_count = resolve_tags(d_tag)
+                if d_tag_name in subscribed_tags:
+                    deleted_tags.append(d_tag_name)
+                    
+            for u_tag in updated_tags_raw:
+                u_tag_name, u_tag_count = resolve_tags(u_tag)
+                if u_tag_name in subscribed_tags:
+                    updated_tags.append(u_tag_name)
+        
+            updated_tags.extend(deleted_tags)
+            changed_tags = list(set(updated_tags))
+            
+            if len(changed_tags) != 0:
+                print("Publishing email for updated image add.")
+                tags_str = ", ".join(changed_tags)
+                img_url = event["Records"][0]["dynamodb"]["NewImage"]["image_url"]["S"]
+                response = sns.publish(
+                    TargetArn = topic_arn,
+                    Message = f"Hello there! Image has been updated for the tags: {tags_str}. Image URL is: {img_url}",
+                    Subject = f"Image updated for {tags_str} tags",
+                    MessageAttributes={
+                        'email_id': {
+                            'DataType': 'String',
+                            'StringValue': user_email
+                        }
+                    }
+                )
         
         response_body["message"] = f"Tag change detected successfully!"
         response["body"] = response_body.__str__()
@@ -157,7 +182,7 @@ def run(event, context):
         response_body["message"] = f"Exception: {e}"
         response["body"] = response_body.__str__()
     
-    response_body["message"] = "No images available for given thumbnail url."
+    response_body["message"] = "No tag changes detected for given thumbnail url."
     response["body"] = response_body.__str__()
 
     return response

@@ -48,18 +48,33 @@ def get_user_email_from_user_id(user_id):
             return attribute['Value']
 
 def subscribe_to_topic(email):
-    response = sns.subscribe(
-        TopicArn=topic_arn,
-        Protocol='email',
-        Endpoint=email,
-        Attributes={
-            'FilterPolicy': json.dumps({
-                'email_id': [email]
-            })
-        }
-    )
+
+    subscription_arn = ""
+    print("Get list of subscriptions for given SNS topic.")
+    list_subs = sns.list_subscriptions_by_topic(TopicArn = topic_arn)
     
-    return response['SubscriptionArn']
+    if "Subscriptions" in list_subs and len(list_subs["Subscriptions"]) != 0:
+        for subscription in list_subs["Subscriptions"]:
+            if subscription["Endpoint"] == email:
+                subscription_arn = subscription["SubscriptionArn"]
+                break
+        
+    if subscription_arn == "":
+        print("Subscribing to SNS topic.")
+        response = sns.subscribe(
+            TopicArn=topic_arn,
+            Protocol='email',
+            Endpoint=email,
+            Attributes={
+                'FilterPolicy': json.dumps({
+                    'email_id': [email]
+                })
+            }
+        )
+        return response['SubscriptionArn']
+    else:
+        print("User has already subscribed to topic.")
+        return subscription_arn
 
 def run(event, _):
     """
@@ -88,20 +103,18 @@ def run(event, _):
         
         subscription_arn = subscribe_to_topic(user_email)
         print("Subscription ARN:", subscription_arn)
-        return send_response(200,message)
+        return send_response(200, message)
     except Exception as e:
         print(f"Failed to add tags for subscription: {e}")
         return send_response(500,f"Exception: {e}")
 
-
-  
 def send_response(status_code, message):
     '''
     A generic function to handle the response body
     '''
     response_body = dict()
     response = dict()
-    response_body["message"]  = message
+    response_body["message"] = message
     response["statusCode"] = status_code
     response["body"] = response_body.__str__()
     return response
