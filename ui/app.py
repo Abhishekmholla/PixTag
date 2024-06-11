@@ -136,7 +136,7 @@ def home():
     is_logged_in = session.get('logged_in')
     
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -180,7 +180,7 @@ def upload_image():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -248,7 +248,7 @@ def search_by_tags():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -305,7 +305,7 @@ def search_by_thumbnail():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -378,7 +378,7 @@ def search_by_image():
 
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -438,7 +438,7 @@ def add_delete_tags():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
     
@@ -474,7 +474,7 @@ def delete_images():
             
             # # If the API fails, display the error
             if not response.ok:
-                return render_template("home.html", error = True, error_message = "Tags cannot be updated. Please check the thumbnail urls and try again")
+                return render_template("home.html", error = True, error_message = "Thumbnail image URL to be deleted does not exist.")
             
             # Rendering the template 
             return render_template(
@@ -491,7 +491,7 @@ def delete_images():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
@@ -541,7 +541,7 @@ def add_user_tag_subscription():
     
     is_logged_in = session.get('logged_in')
     if not is_logged_in:
-        return redirect(url_for('login_user'))
+        return redirect(url_for('sign_up'))
     else:
         return render_template("home.html", error = False)
 
