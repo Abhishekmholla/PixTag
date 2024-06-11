@@ -96,7 +96,8 @@ body {
     margin-bottom: 16px; /* Adjust the spacing as needed */
 }
 
-/*Toggle Switch */
+/* Toggle Switch */
+
 .toggle-container {
     display: flex;
     align-items: center;

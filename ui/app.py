@@ -70,7 +70,7 @@ def sign_up_user():
             log.info("Creating new user")
             
             # Signing in the user
-            auth.sign_up(givenname,familyname, password, email)
+            auth.sign_up(givenname, familyname, password, email)
         except Exception as e:   
             #  If any errors redirect the user to login page
             log.error(f"Exception: {e}")
@@ -121,6 +121,12 @@ def sign_out():
         except Exception as e:
             log.error(f"Exception: {e}")
             return render_template('login.html', error = True)
+    
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
  
 @app.route('/pixtag', methods=['GET'])
 def home():
@@ -172,7 +178,11 @@ def upload_image():
             log.error(f"Error during image upload. Please check logs. Exception{e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 @app.route('/pixtag/search-by-tags', methods=["GET","POST"])
 def search_by_tags():
@@ -185,7 +195,6 @@ def search_by_tags():
     all_found_tags = list()
     
     if request.method == 'POST':
-        
         
         try:
             tags = request.form.get('tags')
@@ -237,7 +246,11 @@ def search_by_tags():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 @app.route('/pixtag/search-by-thumbnail', methods=["GET","POST"])
 def search_by_thumbnail():
@@ -290,7 +303,11 @@ def search_by_thumbnail():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 @app.route('/pixtag/search-by-image', methods=["GET","POST"])
 def search_by_image():
@@ -358,8 +375,12 @@ def search_by_image():
         except Exception as e:
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
-    
-    return redirect(url_for('login_user'))
+
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 @app.route('/pixtag/add-delete-tags', methods=["GET","POST"])
 def add_delete_tags():
@@ -415,8 +436,12 @@ def add_delete_tags():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
-
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
+    
 @app.route('/pixtag/delete-image', methods=["GET","POST","DELETE"])
 def delete_images():
     '''
@@ -464,7 +489,11 @@ def delete_images():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 @app.route('/pixtag/subscribe-tag', methods=["POST","GET"])
 def add_user_tag_subscription():
@@ -510,7 +539,11 @@ def add_user_tag_subscription():
             log.error(f"Exception: {e}")
             return render_template("home.html", error = True, error_message = e)
     
-    return redirect(url_for('login_user'))
+    is_logged_in = session.get('logged_in')
+    if not is_logged_in:
+        return redirect(url_for('login_user'))
+    else:
+        return render_template("home.html", error = False)
 
 
 if __name__ == '__main__':
